@@ -87,6 +87,14 @@ class GamepadState:
         self.RY = msg.axes[3]
         self.RT = msg.axes[13]
 
+    def parse_xbox_usb(self, msg):
+        self.L1 = msg.buttons[5]  #auto takeoff, right shoulder
+        self.R1 = msg.buttons[4]  #auto land,  left shoulder
+        self.RY = msg.axes[4]     #pitch
+        self.RX = msg.axes[3]     #roll
+        self.LY = msg.axes[1]     #throttle
+        self.LX = msg.axes[0]     #yaw
+
     def parse(self, msg):
         err = None
         try:
@@ -95,6 +103,10 @@ class GamepadState:
             err = e
         try:
             return self.parse_ps3_usb2(msg)
+        except ValueError, e:
+            err = e
+        try:
+            return self.parse_xbox_usb(msg)
         except ValueError, e:
             err = e
         raise err
@@ -225,6 +237,19 @@ class GamepadTeleopNode:
 
         # Copy to previous state
         self.joy_state_prev = self.joy_state
+
+        # rospy.logerr("auto takeoff:")
+        # rospy.logerr(self.joy_state.L1)
+        # rospy.logerr("auto land:")
+        # rospy.logerr(self.joy_state.R1)
+        # rospy.logerr("pitch:")
+        # rospy.logerr(self.joy_state.RY)
+        # rospy.logerr("roll:")
+        # rospy.logerr(self.joy_state.RX)
+        # rospy.logerr("throttle:")
+        # rospy.logerr(self.joy_state.LY)
+        # rospy.logerr("yaw:")
+        # rospy.logerr(self.joy_state.LX)
 
     def spin(self):
         rospy.spin()
