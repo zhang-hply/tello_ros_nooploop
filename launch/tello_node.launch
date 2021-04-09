@@ -15,7 +15,7 @@
 			<param name="tello_ip" value="$(arg tello_ip)" />
 			<param name="tello_cmd_server_port" value="$(arg tello_cmd_server_port)" />
 			<param name="connect_timeout_sec" value="10.0" />
-			<param name="stream_h264_video" value="true" />
+			<param name="stream_h264_video" value="false" />
 			<param name="camera_calibration" value="$(arg camera_calibration)" />			
 		</node>
 
