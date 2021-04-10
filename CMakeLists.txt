@@ -54,6 +54,7 @@ catkin_python_setup()
 add_message_files(
   FILES
   TelloStatus.msg
+  CNN_out.msg
 )
 
 ## Generate services in the 'srv' folder
