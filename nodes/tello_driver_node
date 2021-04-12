@@ -118,6 +118,8 @@ class TelloNode(tello.Tello):
 
         # Setup topics and services
         # NOTE: ROS interface deliberately made to resemble bebop_autonomy
+        self.pub_cmd_send_tello = rospy.Publisher(
+            'debug/cmd_send_tello', Twist, queue_size=10)
         self.pub_status = rospy.Publisher(
             'status', TelloStatus, queue_size=1, latch=True)
         if self.stream_h264_video:
@@ -138,13 +140,15 @@ class TelloNode(tello.Tello):
             'flattrim', Empty, self.cb_flattrim)
         self.sub_flip = rospy.Subscriber('flip', UInt8, self.cb_flip)
         self.sub_cmd_vel = rospy.Subscriber('cmd_vel', Twist, self.cb_cmd_vel)
+        self.sub_dronet_cmd = rospy.Subscriber('/cnn_tello/desired_velocity', Twist, self.cb_dronet_cmd)
         self.sub_fast_mode = rospy.Subscriber(
             'fast_mode', Empty, self.cb_fast_mode)
 
         self.subscribe(self.EVENT_FLIGHT_DATA, self.cb_status_log)
 
 #########################################BEGIN#####################################
-
+        # inint dronet yaw rate
+        self.dronet_yaw_rate = 0.0
         # Reconstruction H264 video frames        
         self.prev_seq_id = None
         self.seq_block_count = 0        
@@ -440,10 +444,19 @@ class TelloNode(tello.Tello):
         self.pub_imu.publish(imu_msg)
 
     def cb_cmd_vel(self, msg):
+        yaw_rate = msg.angular.z + self.dronet_yaw_rate
         self.set_pitch( self.__scale_vel_cmd(msg.linear.y) )
         self.set_roll( self.__scale_vel_cmd(msg.linear.x) )
-        self.set_yaw( self.__scale_vel_cmd(msg.angular.z) )
+        self.set_yaw( self.__scale_vel_cmd(yaw_rate))
         self.set_throttle( self.__scale_vel_cmd(msg.linear.z) )
+        cmd = Twist()
+        cmd.linear.x = msg.linear.y
+        cmd.linear.y = msg.linear.x
+        cmd.linear.z = yaw_rate
+        self.pub_cmd_send_tello.publish(cmd)
+
+    def cb_dronet_cmd(self, msg):
+        self.dronet_yaw_rate = msg.linear.z
 
     def cb_flip(self, msg):
         if msg.data < 0 or msg.data > 7: # flip integers between [0,7]

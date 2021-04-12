@@ -10,7 +10,7 @@ class Dronet_control_tello(tello.Tello):
         self.rate = rospy.Rate(1)
         rospy.Subscriber('/cnn_out/predictions', CNN_out, self.cb_cnn_out)
         rospy.Subscriber('state_change', Bool, self.cb_state_change)
-        self.desired_velocity_pub = rospy.Publisher('cnn_tello/desired_velocity', Twist, queue_size=1)
+        self.desired_velocity_pub = rospy.Publisher('/cnn_tello/desired_velocity', Twist, queue_size=1)
         
         self.max_forward_index_  = 1.0      #max velocity forward
         self.alpha_velocity_ = 0.3          #filter parameter for velocity
