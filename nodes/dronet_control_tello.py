@@ -8,7 +8,7 @@ from std_msgs.msg import Bool
 class Dronet_control_tello(tello.Tello):
     def __init__(self):
         self.rate = rospy.Rate(1)
-        rospy.Subscriber('cnn_predictions', CNN_out, self.cb_cnn_out)
+        rospy.Subscriber('/cnn_out/predictions', CNN_out, self.cb_cnn_out)
         rospy.Subscriber('state_change', Bool, self.cb_state_change)
         self.desired_velocity_pub = rospy.Publisher('cnn_tello/desired_velocity', Twist, queue_size=1)
         
@@ -33,8 +33,8 @@ class Dronet_control_tello(tello.Tello):
         self.steering_angle_ = msg.steering_angle
 
         #Output modulation
-        self.steering_angle_ = -1.0 if self.steering_angle_ < -1.0 else None 
-        self.steering_angle_ = 1.0  if self.steering_angle_ > 1.0  else None
+        self.steering_angle_ = -1.0 if self.steering_angle_ < -1.0 else self.steering_angle_ 
+        self.steering_angle_ = 1.0  if self.steering_angle_ > 1.0  else self.steering_angle_
 
     def cb_state_change(self, msg):
         self.use_network_out_ = msg.data
@@ -60,10 +60,12 @@ class Dronet_control_tello(tello.Tello):
             cmd_velocity_.linear.z = self.desired_angular_velocity_
 
 
-            # rospy.loginfo("cnn_out,steering_angle:%f, cal_yaw_rate:%f", self.steering_angle_, self.desired_angular_velocity_)
+            rospy.loginfo("cnn_out,steering_angle:%f, cal_yaw_rate:%f", self.steering_angle_, self.desired_angular_velocity_)
 
             if self.use_network_out_:
-                self.desired_velocity_pub(cmd_velocity_)
+                self.desired_velocity_pub.publish(cmd_velocity_)
+            else:
+                self.desired_velocity_pub.publish(cmd_velocity_)
 
             self.rate.sleep()
 
