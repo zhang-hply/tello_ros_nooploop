@@ -1,9 +1,11 @@
 #!/usr/bin/env python2
+import imp
 from position_controller import PositionController
 import rospy
 from nav_msgs.msg import Odometry
 from quadrotor_msgs.msg import TrajectoryPoint
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Bool
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
@@ -13,6 +15,7 @@ class TelloRacing:
         self.position_sub = rospy.Subscriber("/tello/odometry1", Odometry, self.cb_position)
         self.reference_state_sub = rospy.Subscriber("/hummingbird/autopilot/reference_state", TrajectoryPoint, self.cb_reference_state)
         self.cmd_vel_pub = rospy.Publisher("/tello/cmd_vel", Twist, queue_size=10)
+        self.start_cmd_sub = rospy.Subscriber("/tello/start_cmd", Bool, self.cb_startCmd)
         
         self.K = np.mat([[1,0,0,0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
         self.position_controller = PositionController(self.K)
@@ -23,6 +26,7 @@ class TelloRacing:
         self.cmd_vel_msg = Twist()
         # The angle between true north and xoy built by nooploop
         self.heading_offset = 0.5
+        self.start_cmd = False
 
     def cb_odom(self, msg):
         quat = [msg.pose.pose.orientation.x, 
@@ -32,6 +36,9 @@ class TelloRacing:
         r = R.from_quat(quat)
         self.curr_state[3] = r.as_euler('xyz', degrees=True)[2] + self.heading_offset
     
+    def cb_startCmd(self, msg):
+        self.start_cmd = msg.data
+
     def cb_position(self, msg):
         self.curr_state[0] = msg.pose.pose.position.x
         self.curr_state[1] = msg.pose.pose.position.y
@@ -43,10 +50,8 @@ class TelloRacing:
         self.desired_state[2] = msg.pose.position.z
         self.desired_state[3] = msg.heading
         
-
-
     def run(self):
-        rate = rospy.Rate(20)
+        rate = rospy.Rate(10)
 
         while not rospy.is_shutdown():
             self.position_controller.set_curr_position(self.curr_state)
@@ -56,7 +61,8 @@ class TelloRacing:
             self.cmd_vel_msg.linear.y = cmd_vel[1]
             self.cmd_vel_msg.linear.z = cmd_vel[2]
             self.cmd_vel_msg.angular.z = cmd_vel[3]
-            self.cmd_vel_pub.publish(self.cmd_vel_msg)
+            if(self.start_cmd):
+                self.cmd_vel_pub.publish(self.cmd_vel_msg)
             rate.sleep()
 
 
