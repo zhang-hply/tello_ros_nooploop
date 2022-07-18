@@ -444,15 +444,15 @@ class TelloNode(tello.Tello):
         self.pub_imu.publish(imu_msg)
 
     def cb_cmd_vel(self, msg):
-        yaw_rate = msg.angular.z + self.dronet_yaw_rate
+        # yaw_rate = msg.angular.z + self.dronet_yaw_rate
         self.set_pitch( self.__scale_vel_cmd(msg.linear.y) )
         self.set_roll( self.__scale_vel_cmd(msg.linear.x) )
-        self.set_yaw( self.__scale_vel_cmd(yaw_rate))
+        self.set_yaw( self.__scale_vel_cmd(msg.angular.z))
         self.set_throttle( self.__scale_vel_cmd(msg.linear.z) )
         cmd = Twist()
         cmd.linear.x = msg.linear.y
         cmd.linear.y = msg.linear.x
-        cmd.linear.z = yaw_rate
+        cmd.linear.z = msg.angular.z
         self.pub_cmd_send_tello.publish(cmd)
 
     def cb_dronet_cmd(self, msg):

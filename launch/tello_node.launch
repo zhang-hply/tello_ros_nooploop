@@ -7,6 +7,8 @@
 	<arg name="camera_calibration"		default="$(find tello_driver)/cfg/960x720.yaml" />    
 	<arg name="namespace"			default="tello" />
 
+	<include file="$(find nlink_parser)/launch/linktrack.launch"/>
+
 	<group ns="$(arg namespace)">
 
 		<node pkg="tello_driver" name="tello_driver_node" type="tello_driver_node" output="screen">
@@ -22,5 +24,7 @@
 		<node pkg="image_transport" name="image_compressed" type="republish" args="raw in:=image_raw compressed out:=image_raw" />
 
 	</group>
+
+	<node pkg="tello_driver" name="cnn_control_tello" type="cnn_control_tello.py" output="screen"/>
 
 </launch>
