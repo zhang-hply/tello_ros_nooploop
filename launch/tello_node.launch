@@ -27,6 +27,14 @@
 
 	<node pkg="tello_driver" name="cnn_control_tello" type="cnn_control_tello.py" output="screen"/>
 
-	<node pkg="rosbag" name="record" type="record" args="-a -j -x /tello/camera/image_raw -o /home/anfield/bag/cnn_tello_racing"/>
+	<node pkg="rosbag" name="record" type="record" args="
+	 /hummingbird/autopilot/reference_state
+	 /tello/cmd_vel
+	 /tello/odom
+	 /tello/odometry1
+
+	
+	 -o /home/anfield/bag/cnn_tello_racing"/>
+	 	 <!-- /hummingbird/image_with_prediction -->
 
 </launch>
