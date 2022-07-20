@@ -19,7 +19,7 @@ class PositionController:
 
     def get_vel_cmd(self, desired_position):
         self.vel =  self.K * (desired_position - self.curr_position)
-        max_vel = np.mat([2.0, 2.0, 2.0, 2.0])
+        max_vel = np.mat([0.6, 0.6, 2.0, 0.8])
         self.limit(max_vel)
         return self.vel
 

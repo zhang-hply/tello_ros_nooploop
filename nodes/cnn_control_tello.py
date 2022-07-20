@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-import imp
 from position_controller import PositionController
 import rospy
 from nav_msgs.msg import Odometry
@@ -8,7 +7,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-
+import math
 class TelloRacing:
     def __init__(self):
         self.odom_sub = rospy.Subscriber("/tello/odom", Odometry, self.cb_odom)
@@ -17,15 +16,15 @@ class TelloRacing:
         self.cmd_vel_pub = rospy.Publisher("/tello/cmd_vel", Twist, queue_size=10)
         self.start_cmd_sub = rospy.Subscriber("/tello/start_cmd", Bool, self.cb_startCmd)
         
-        self.K = np.mat([[1,0,0,0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        self.K = np.mat([[1,0,0,0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0.05]])
         self.position_controller = PositionController(self.K)
 
         self.curr_state = np.mat([[0.0], [0.0], [0.0], [0.0]])
-        self.desired_state = np.mat([[0.0], [0.0], [0.0], [0.0]])
+        self.desired_state = np.mat([[2.5], [1.5], [0.0], [0.0]])
 
         self.cmd_vel_msg = Twist()
         # The angle between true north and xoy built by nooploop
-        self.heading_offset = 0.5
+        self.heading_offset = 0.0
         self.start_cmd = False
 
     def cb_odom(self, msg):
@@ -35,6 +34,7 @@ class TelloRacing:
                             msg.pose.pose.orientation.w]
         r = R.from_quat(quat)
         self.curr_state[3] = r.as_euler('xyz', degrees=True)[2] + self.heading_offset
+        # print("The yaw is %f"%(self.curr_state[3]))
     
     def cb_startCmd(self, msg):
         self.start_cmd = msg.data
@@ -48,7 +48,7 @@ class TelloRacing:
         self.desired_state[0] = msg.pose.position.x
         self.desired_state[1] = msg.pose.position.y
         self.desired_state[2] = msg.pose.position.z
-        self.desired_state[3] = msg.heading
+        self.desired_state[3] = msg.heading * 180.0 / math.pi
         
     def run(self):
         rate = rospy.Rate(10)
@@ -57,9 +57,9 @@ class TelloRacing:
             self.position_controller.set_curr_position(self.curr_state)
             cmd_vel = self.position_controller.get_vel_cmd(self.desired_state)
             
-            self.cmd_vel_msg.linear.x = cmd_vel[0]
-            self.cmd_vel_msg.linear.y = cmd_vel[1]
-            self.cmd_vel_msg.linear.z = cmd_vel[2]
+            self.cmd_vel_msg.linear.x = cmd_vel[1]
+            self.cmd_vel_msg.linear.y = cmd_vel[0]
+            self.cmd_vel_msg.linear.z = 0.0
             self.cmd_vel_msg.angular.z = cmd_vel[3]
             if(self.start_cmd):
                 self.cmd_vel_pub.publish(self.cmd_vel_msg)
