@@ -34,6 +34,7 @@ class TelloRacing:
                             msg.pose.pose.orientation.w]
         r = R.from_quat(quat)
         self.curr_state[3] = r.as_euler('xyz', degrees=True)[2] + self.heading_offset
+        print("The yaw is %f"%(self.curr_state[3]))
     
     def cb_startCmd(self, msg):
         self.start_cmd = msg.data
