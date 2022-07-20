@@ -28,13 +28,12 @@ class TelloRacing:
         self.start_cmd = False
 
     def cb_odom(self, msg):
-        None
-        # quat = [msg.pose.pose.orientation.x, 
-        #                     msg.pose.pose.orientation.y, 
-        #                     msg.pose.pose.orientation.z,
-        #                     msg.pose.pose.orientation.w]
-        # r = R.from_quat(quat)
-        # self.curr_state[3] = r.as_euler('xyz', degrees=True)[2] + self.heading_offset
+        quat = [msg.pose.pose.orientation.x, 
+                            msg.pose.pose.orientation.y, 
+                            msg.pose.pose.orientation.z,
+                            msg.pose.pose.orientation.w]
+        r = R.from_quat(quat)
+        self.curr_state[3] = r.as_euler('xyz', degrees=True)[2] + self.heading_offset
     
     def cb_startCmd(self, msg):
         self.start_cmd = msg.data
@@ -53,23 +52,22 @@ class TelloRacing:
         
     def run(self):
         rate = rospy.Rate(10)
-        # while not rospy.is_shutdown():
-        while(1):
-            # self.position_controller.set_curr_position(self.curr_state)
-            # cmd_vel = self.position_controller.get_vel_cmd(self.desired_state)
+        while not rospy.is_shutdown():
+            self.position_controller.set_curr_position(self.curr_state)
+            cmd_vel = self.position_controller.get_vel_cmd(self.desired_state)
 
                         
-            # yaw = self.curr_state[3] / 180.0 * math.pi
-            # body_vel_x = cmd_vel[0] * math.cos(yaw) + cmd_vel[1] * math.sin(yaw)
-            # body_vel_y = -cmd_vel[0] * math.sin(yaw) + cmd_vel[1] * math.cos(yaw)
+            yaw = self.curr_state[3] / 180.0 * math.pi
+            body_vel_x = cmd_vel[0] * math.cos(yaw) + cmd_vel[1] * math.sin(yaw)
+            body_vel_y = -cmd_vel[0] * math.sin(yaw) + cmd_vel[1] * math.cos(yaw)
 
-            # self.cmd_vel_msg.linear.x = body_vel_y
-            # self.cmd_vel_msg.linear.y = body_vel_x
-            # self.cmd_vel_msg.linear.z = 0.0
-            # self.cmd_vel_msg.angular.z = cmd_vel[3]
-            # # if(self.start_cmd):
-            # self.cmd_vel_pub.publish(self.cmd_vel_msg)
-            print("Send cmd")
+            self.cmd_vel_msg.linear.x = body_vel_y
+            self.cmd_vel_msg.linear.y = body_vel_x
+            self.cmd_vel_msg.linear.z = 0.0
+            self.cmd_vel_msg.angular.z = cmd_vel[3]
+            if(self.start_cmd):
+                self.cmd_vel_pub.publish(self.cmd_vel_msg)
+                print("Send cmd")
             rate.sleep()
 
 
