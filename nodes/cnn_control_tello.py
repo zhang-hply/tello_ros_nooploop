@@ -20,7 +20,7 @@ class TelloRacing:
         self.position_controller = PositionController(self.K)
 
         self.curr_state = np.mat([[0.0], [0.0], [0.0], [0.0]])
-        self.desired_state = np.mat([[2.5], [1.5], [0.0], [90.0]])
+        self.desired_state = np.mat([[2.5], [1.5], [0.0], [0.0]])
 
         self.cmd_vel_msg = Twist()
         # The angle between true north and xoy built by nooploop
@@ -36,7 +36,7 @@ class TelloRacing:
         self.curr_state[3] = r.as_euler('xyz', degrees=True)[2] + self.heading_offset
         self.curr_state[3] = -self.curr_state[3]
         print("The yaw is %f"%(self.curr_state[3]))
-    
+
     def cb_startCmd(self, msg):
         self.start_cmd = msg.data
         
@@ -67,9 +67,9 @@ class TelloRacing:
             self.cmd_vel_msg.linear.y = body_vel_x
             self.cmd_vel_msg.linear.z = 0.0
             self.cmd_vel_msg.angular.z = -cmd_vel[3]
-            if(self.start_cmd):
-                self.cmd_vel_pub.publish(self.cmd_vel_msg)
-                print("Send cmd")
+            # if(self.start_cmd):
+            self.cmd_vel_pub.publish(self.cmd_vel_msg)
+            print("Send cmd")
             rate.sleep()
 
 

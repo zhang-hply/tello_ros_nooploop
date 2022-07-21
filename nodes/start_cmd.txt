@@ -1,1 +1,2 @@
-rostopic pub /tello/start_cmd std_msgs/Bool "data: true" 
+rostopic echo /hummingbird/autopilot/reference_state
+timeout 1s rostopic pub /tello/start_cmd std_msgs/Bool "data: true" 
